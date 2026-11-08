@@ -1,0 +1,22 @@
+# Example variable values for the dev environment.
+#
+# Usage:
+#   1. Copy this file to terraform.tfvars
+#        PowerShell:   Copy-Item terraform.tfvars.example terraform.tfvars
+#        Linux/macOS:  cp terraform.tfvars.example terraform.tfvars
+#   2. Replace the placeholder email with your own address.
+#   3. Never commit terraform.tfvars (it is excluded by .gitignore).
+#
+# Only alert_email is required. The other values below match the defaults
+# in variables.tf and can be removed.
+#
+# Note: keep vpc_cidr as 10.0.0.0/16. The subnet CIDRs (10.0.1.0/24 to
+# 10.0.4.0/24) are hard-coded in modules/networking/main.tf and must fall
+# inside the VPC CIDR.
+
+alert_email = "your-email@example.com"
+
+project_name = "production-infrastructure"
+environment  = "dev"
+vpc_cidr     = "10.0.0.0/16"
+aws_region   = "ap-south-1"

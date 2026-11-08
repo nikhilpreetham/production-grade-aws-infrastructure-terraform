@@ -1,0 +1,38 @@
+flowchart LR
+    NET(("Internet"))
+    IGW["Internet Gateway"]
+
+    subgraph VPC["VPC 10.0.0.0/16 (ap-south-1)"]
+        ALB["Application Load Balancer<br/>HTTP :80, public subnets A + B"]
+        TG["Target Group<br/>health check GET /"]
+        ASG["Auto Scaling Group<br/>min 2 / desired 2 / max 4"]
+
+        subgraph AZA["AZ ap-south-1a"]
+            PUBA["Public subnet A<br/>NAT Gateway + EIP"]
+            EC2A["Private subnet A<br/>EC2 t3.micro + Apache"]
+        end
+
+        subgraph AZB["AZ ap-south-1b"]
+            PUBB["Public subnet B<br/>no NAT Gateway"]
+            EC2B["Private subnet B<br/>EC2 t3.micro + Apache"]
+        end
+    end
+
+    subgraph MON["Monitoring"]
+        CW["CloudWatch<br/>2 alarms + dashboard"]
+        SNS["SNS topic"]
+        MAIL(["Email"])
+    end
+
+    NET --> IGW --> ALB --> TG
+    TG --> EC2A
+    TG --> EC2B
+    ASG -.->|launch / replace| EC2A
+    ASG -.->|launch / replace| EC2B
+    EC2A -.->|outbound| PUBA
+    EC2B -.->|outbound, cross-AZ| PUBA
+    PUBA -.->|0.0.0.0/0| IGW
+
+    ALB -.->|ALB metrics| CW
+    ASG -.->|ASG metrics| CW
+    CW --> SNS --> MAIL
