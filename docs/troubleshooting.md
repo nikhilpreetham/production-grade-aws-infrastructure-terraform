@@ -86,3 +86,13 @@ aws cloudwatch describe-alarm-history --alarm-name dev-alb-unhealthy-targets --h
 # Terraform state addresses
 terraform state list
 ```
+
+**Linux/macOS (Bash):**
+
+```bash
+# Target health
+aws elbv2 describe-target-health --region ap-south-1 \
+  --target-group-arn "$(aws elbv2 describe-target-groups --names dev-app-target-group --region ap-south-1 --query "TargetGroups[0].TargetGroupArn" --output text)"
+
+# The other commands in the block above are the same in Bash.
+```

@@ -329,6 +329,8 @@ After the refactor, `terraform plan` reported `Plan: 0 to add, 0 to change, 0 to
 
 ## 11. Prerequisites
 
+> Commands are written for **Windows PowerShell**. Where Linux or macOS needs different syntax, a **Linux/macOS (Bash)** version follows directly below. All other commands work the same on every platform.
+
 | Tool | Notes |
 |---|---|
 | AWS account | IAM permissions for VPC, EC2, ELB, Auto Scaling, IAM, CloudWatch, SNS and SSM |
@@ -345,10 +347,17 @@ Terraform uses the standard AWS credential chain. Configure a named profile with
 aws configure --profile terraform-lab
 # AWS Access Key ID, Secret Access Key, default region: ap-south-1, output: json
 
-$env:AWS_PROFILE = "terraform-lab"     # PowerShell
-# export AWS_PROFILE=terraform-lab     # Linux / macOS
+$env:AWS_PROFILE = "terraform-lab"
 
 aws sts get-caller-identity             # confirm which account and identity are in use
+```
+
+**Linux/macOS (Bash):**
+
+```bash
+aws configure --profile terraform-lab
+export AWS_PROFILE=terraform-lab
+aws sts get-caller-identity
 ```
 
 Never put access keys in `.tf` or `.tfvars` files. Use a least-privilege IAM user or IAM Identity Center (SSO) credentials rather than the root account.
@@ -361,7 +370,14 @@ All commands run from the `environments/dev` directory.
 
 ```powershell
 cd environments/dev
-Copy-Item terraform.tfvars.example terraform.tfvars    # Linux/macOS: cp terraform.tfvars.example terraform.tfvars
+Copy-Item terraform.tfvars.example terraform.tfvars
+```
+
+**Linux/macOS (Bash):**
+
+```bash
+cd environments/dev
+cp terraform.tfvars.example terraform.tfvars
 ```
 
 Edit `terraform.tfvars` and set `alert_email` to your own address. `terraform.tfvars` is ignored by Git and must not be committed.
@@ -428,6 +444,14 @@ $ALB_DNS = aws elbv2 describe-load-balancers --names dev-application-alb `
 curl "http://$ALB_DNS"
 ```
 
+**Linux/macOS (Bash):**
+
+```bash
+ALB_DNS=$(aws elbv2 describe-load-balancers --names dev-application-alb \
+  --query "LoadBalancers[0].DNSName" --output text --region ap-south-1)
+curl "http://$ALB_DNS"
+```
+
 Expected response body:
 
 ```html
@@ -442,12 +466,27 @@ aws elbv2 describe-target-health --target-group-arn $TG_ARN --region ap-south-1 
   --query "TargetHealthDescriptions[].[Target.Id,TargetHealth.State]" --output table
 ```
 
+**Linux/macOS (Bash):**
+
+```bash
+TG_ARN=$(terraform output -raw target_group_arn)
+aws elbv2 describe-target-health --target-group-arn "$TG_ARN" --region ap-south-1 \
+  --query "TargetHealthDescriptions[].[Target.Id,TargetHealth.State]" --output table
+```
+
 Expected: two targets in the `healthy` state.
 
 ### 14.3 Auto Scaling Group
 
 ```powershell
 aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names (terraform output -raw autoscaling_group_name) --region ap-south-1 `
+  --query "AutoScalingGroups[0].Instances[].[InstanceId,AvailabilityZone,LifecycleState,HealthStatus]" --output table
+```
+
+**Linux/macOS (Bash):**
+
+```bash
+aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$(terraform output -raw autoscaling_group_name)" --region ap-south-1 \
   --query "AutoScalingGroups[0].Instances[].[InstanceId,AvailabilityZone,LifecycleState,HealthStatus]" --output table
 ```
 
@@ -477,6 +516,13 @@ aws cloudwatch describe-alarms --alarm-names dev-alb-unhealthy-targets dev-asg-l
   --query "MetricAlarms[].[AlarmName,StateValue]" --output table --region ap-south-1
 ```
 
+**Linux/macOS (Bash):**
+
+```bash
+aws cloudwatch describe-alarms --alarm-names dev-alb-unhealthy-targets dev-asg-low-capacity \
+  --query "MetricAlarms[].[AlarmName,StateValue]" --output table --region ap-south-1
+```
+
 ### Dashboard
 
 Dashboard name with default variables: `production-infrastructure-dev-dashboard`.
@@ -497,6 +543,12 @@ Dashboard name with default variables: `production-infrastructure-dev-dashboard`
 
 ```powershell
 aws sns list-subscriptions-by-topic --region ap-south-1 --topic-arn (terraform output -raw sns_topic_arn)
+```
+
+**Linux/macOS (Bash):**
+
+```bash
+aws sns list-subscriptions-by-topic --region ap-south-1 --topic-arn "$(terraform output -raw sns_topic_arn)"
 ```
 
 ## 17. Failure Simulations
